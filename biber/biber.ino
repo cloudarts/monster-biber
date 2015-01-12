@@ -17,20 +17,20 @@ Servo servo;
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
-COMMAND currentCommand;
-
 char inData[COMMAND_BUFFER_LENGTH]; // Allocate some space for the string
 char inChar=-1; // Where to store the character read
 byte index = 0; // Index into array; where to store the character
 
-enum COMMANDS {
+enum COMMAND {
   NONE = -1,
   SONAR,        // value = servo microseconds
-  COMMANDS_MAX
-}
+  COMMAND_MAX
+} currentCommand;
+
 
 unsigned long lastServoTime;
 unsigned long lastSonarTime;
+
   
 void setup() {
   
@@ -48,13 +48,13 @@ void loop() {
 
 bool readSerial() {
   bool readSomething = false;
-  int command = -1;
+  COMMAND command = NONE;
   int value = -1;
   while (Serial.available() > 0) {
     readSomething = true;
-    command = Serial.parseInt();
-    if( command < 0 || command > COMMANDS.COMMANDS_MAX) {
-      command = COMMANDS.NONE;
+    command = (COMMAND)Serial.parseInt();
+    if( command < 0 || command > COMMAND_MAX) {
+      command = NONE;
     }
     value = Serial.parseInt();
   }
@@ -62,13 +62,18 @@ bool readSerial() {
   switch(command) {
     case SONAR: {
        sonarPing(value);
+	   break;
     } 
+
+	default: {
+          
+	}
   } 
   
   return readSomething;
 }
 
-void sonarPing(microseconds) {
+void sonarPing(int microseconds) {
   microseconds = constrain(microseconds, SERVO_MIN_MS, SERVO_MAX_MS);
   servo.writeMicroseconds(microseconds);
   waitForServo();
@@ -77,7 +82,7 @@ void sonarPing(microseconds) {
   lastServoTime = millis();
 }
 
-void waitForServo {
+void waitForServo() {
   unsigned long now = millis();
   unsigned long diff = now - lastServoTime;
   if( diff < SERVO_WAIT_TIME_MILLIS ) {
