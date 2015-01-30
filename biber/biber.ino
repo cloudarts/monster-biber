@@ -1,5 +1,25 @@
+/**
+
+COMMAND SYNTAX:
+===============
+"[COMMAND];[VALUE]"
+
+COMMANDS AND VALUES:
+====================
+-1 NONE
+0 TURN HEAD (600 - 2400)
+1 SONAR PING (no value)
+2 SET LEFT MOTOR SPEED (-255 - 255) 
+3 SET RIGHT MOTOR SPEED (-255 - 255)
+4 SET SPEED FOR BOTH MOTORS (-255 - 255)
+
+*/
+
+
+
 #include <Servo.h> 
 #include <NewPing.h>
+#include <AFMotor.h>
 
 #define BAUD_RATE 115200
 #define SERVO_HEAD 10
@@ -10,12 +30,17 @@
 #define SERVO_WAIT_TIME_MILLIS 30
 #define SONAR_WAIT_TIME_MILLIS 30
 
-#define SERVO_MIN_MS 600
-#define SERVO_MAX_MS 2400
-
 #define COMMAND_BUFFER_LENGTH 12
 
+#define SERVO_MIN_MS 600
+#define SERVO_MAX_MS 2400
+const int SERVO_CENTER = (SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS;
+
+
 Servo servo;
+
+AF_DCMotor motorLeft(1);
+AF_DCMotor motorRight(4);
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
@@ -25,8 +50,11 @@ byte index = 0; // Index into array; where to store the character
 
 enum COMMAND {
   NONE = -1, 
-  TURN_HEAD = 0, // value = servo microseconds
-  SONAR = 1,        
+  TURN_HEAD, // value = servo microseconds
+  SONAR,  
+  SET_MOTOR_LEFT,    // value -255 - 255
+  SET_MOTOR_RIGHT,
+  SET_MOTORS, 
   COMMAND_MAX
 } currentCommand;
 
@@ -42,6 +70,12 @@ void setup() {
   Serial.begin(BAUD_RATE); 
   lastServoTime = millis();
   lastSonarTime = millis();
+  
+  motorLeft.setSpeed(0);
+  motorRight.setSpeed(0);
+  motorLeft.run(RELEASE);
+  motorRight.run(RELEASE);
+  
   sayYes();
 }
 
@@ -71,15 +105,60 @@ bool readSerial() {
     case TURN_HEAD: {
       turnHead(value);  
       break;
+    }
+    
+    case SET_MOTOR_LEFT: {
+      setMotorSpeed(1, value);  
+      break;
+    } 
+    
+    case SET_MOTOR_RIGHT: {
+      setMotorSpeed(2, value);  
+      break;
+    } 
+    
+    case SET_MOTORS: {
+      setMotorSpeed(0, value);  
+      break;
     } 
 
     default: {
-
+      setMotorSpeed(0,0);
+      turnHead(SERVO_CENTER);
     }
   } 
   
   return readSomething;
 }
+
+void setMotorSpeed(int motor, int value) {
+  motor = constrain(motor, 0, 2);
+  value = constrain(value, -255, 255);
+  int absValue = abs(value);
+  
+  uint8_t direction = RELEASE;
+  if( value > 0 ) {
+    direction = FORWARD;
+  }
+  else if( value < 0 ) {
+    direction = BACKWARD;  
+  }
+  
+  if( motor == 0 ) {
+    motorLeft.setSpeed(absValue);
+    motorRight.setSpeed(absValue);  
+    motorLeft.run(direction);
+    motorRight.run(direction);    
+  }
+  else if( motor == 1 ) {
+    motorLeft.setSpeed(absValue);
+    motorLeft.run(direction);    
+  }
+  else {
+    motorRight.setSpeed(absValue);
+    motorRight.run(direction);  
+  }
+} 
 
 void sonarPing() {
   unsigned int dist = getDistance();
@@ -117,30 +196,30 @@ unsigned int getDistance() {
 
 
 void sayNo() {
-   servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
+   servo.writeMicroseconds(SERVO_CENTER);
    delay(ANSWER_SERVO_DELAY);
    servo.writeMicroseconds(SERVO_MAX_MS);
    delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
+   servo.writeMicroseconds(SERVO_CENTER);
    delay(ANSWER_SERVO_DELAY);
    servo.writeMicroseconds(SERVO_MAX_MS);
    delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
+   servo.writeMicroseconds(SERVO_CENTER);
    delay(ANSWER_SERVO_DELAY);
    
   lastServoTime = millis();
 }
 
 void sayYes() {
-   servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
+   servo.writeMicroseconds(SERVO_CENTER);
    delay(ANSWER_SERVO_DELAY);
    servo.writeMicroseconds(SERVO_MIN_MS);
    delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
+   servo.writeMicroseconds(SERVO_CENTER);
    delay(ANSWER_SERVO_DELAY);
    servo.writeMicroseconds(SERVO_MIN_MS);
    delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
+   servo.writeMicroseconds(SERVO_CENTER);
    delay(ANSWER_SERVO_DELAY);
    
   lastServoTime = millis();
