@@ -1,6 +1,8 @@
 #include <Servo.h> 
 #include <NewPing.h>
 
+#define BAUD_RATE 115200
+#define SERVO_HEAD 10
 #define TRIGGER_PIN  A1  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     A0  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 300 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
@@ -22,8 +24,9 @@ char inChar=-1; // Where to store the character read
 byte index = 0; // Index into array; where to store the character
 
 enum COMMAND {
-  NONE = -1,
-  SONAR,        // value = servo microseconds
+  NONE = -1, 
+  TURN_HEAD = 0, // value = servo microseconds
+  SONAR = 1,        
   COMMAND_MAX
 } currentCommand;
 
@@ -35,8 +38,8 @@ unsigned long lastSonarTime;
 void setup() {
   
   // turn on servo
-  servo.attach(10);   
-  Serial.begin(115200); 
+  servo.attach(SERVO_HEAD);   
+  Serial.begin(BAUD_RATE); 
   lastServoTime = millis();
   lastSonarTime = millis();
   sayYes();
@@ -61,25 +64,36 @@ bool readSerial() {
   
   switch(command) {
     case SONAR: {
-       sonarPing(value);
-	   break;
+      sonarPing();
+      break;
+    }
+    
+    case TURN_HEAD: {
+      turnHead(value);  
+      break;
     } 
 
-	default: {
-          
-	}
+    default: {
+
+    }
   } 
   
   return readSomething;
 }
 
-void sonarPing(int microseconds) {
+void sonarPing() {
+  unsigned int dist = getDistance();
+  Serial.print(dist);
+  Serial.print("\n");
+  printOK();
+}
+
+void turnHead(int microseconds) {
   microseconds = constrain(microseconds, SERVO_MIN_MS, SERVO_MAX_MS);
   servo.writeMicroseconds(microseconds);
   waitForServo();
   lastServoTime = millis();
-  printDistance(); 
-  lastServoTime = millis();
+  printOK();
 }
 
 void waitForServo() {
@@ -87,15 +101,18 @@ void waitForServo() {
   unsigned long diff = now - lastServoTime;
   if( diff < SERVO_WAIT_TIME_MILLIS ) {
     unsigned long delayTime = SERVO_WAIT_TIME_MILLIS - diff;
-    Serial.write("delaying servo movement for ms: ");
-    Serial.print(delayTime, DEC);
     delay(delayTime);
   }
 }
 
-void printDistance() {
+void printOK() {
+  Serial.println("ok"); 
+}
+
+unsigned int getDistance() {
   unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
-  Serial.print(uS / US_ROUNDTRIP_CM); // Convert ping time to distance in cm and print result (0 = outside set distance range)
+  unsigned int distance = uS / US_ROUNDTRIP_CM; // Convert ping time to distance in cm and print result (0 = outside set distance range)
+  return distance;
 }
 
 
@@ -110,6 +127,8 @@ void sayNo() {
    delay(ANSWER_SERVO_DELAY);
    servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
    delay(ANSWER_SERVO_DELAY);
+   
+  lastServoTime = millis();
 }
 
 void sayYes() {
@@ -123,4 +142,6 @@ void sayYes() {
    delay(ANSWER_SERVO_DELAY);
    servo.writeMicroseconds((SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS);
    delay(ANSWER_SERVO_DELAY);
+   
+  lastServoTime = millis();
 }
