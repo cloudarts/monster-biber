@@ -21,23 +21,63 @@
     </head>
     <body>
     <div class="container">
-      <div class="row">
-        <div class="col-md-3 text-center">
-          <h2>Duration in seconds</h2>
-		  <p><input type="text" id="dialDuration" data-min="0" data-max="5" data-step="0.1" value="0"></p>
-        </div>
-        <div class="col-md-3 text-center">
-          <h2>Motor left speed</h2>
-		  <p><input type="text" id="dialMotorLeft" data-min="-255" data-max="255" value="0"></p>
-       </div>
-        <div class="col-md-3 text-center">
-          <h2>Motor right speed</h2>
-		  <p><input type="text" id="dialMotorRight" data-min="-255" data-max="255" value="0"></p>
-        </div>
-        <div class="col-md-3 text-center">
-          <h2>Head position</h2>
-		  <p><input type="text" id="dialHeadPosition" data-min="600" data-max="2400" value="1500" data-angleArc=170 data-angleOffset=-85 data-cursor=true></p>
-        </div>
+		<div class="row">
+        	<div class="col-md-3 text-center">
+				<div class="panel panel-default">
+		  			<div class="panel-heading">
+		      			<h3 class="panel-title">Action duration seconds</h3>
+					</div>
+				  	<div class="panel-body">
+		  				<p><input type="text" id="dialDuration" data-min="0" data-max="5" data-step="0.1" value="0"></p>
+					</div>
+				</div>
+        	</div>
+        	<div class="col-md-3 text-center">
+				<div class="panel panel-default">
+		  			<div class="panel-heading">
+		      			<h3 class="panel-title">Left motor speed</h3>
+					</div>
+				  	<div class="panel-body">
+					  <p><input type="text" id="dialMotorLeft" data-min="-255" data-max="255" value="0"></p>
+       				</div>
+				</div>
+			</div>
+        	<div class="col-md-3 text-center">
+				<div class="panel panel-default">
+		  			<div class="panel-heading">
+		      			<h3 class="panel-title">Right motor speed</h3>
+					</div>
+				  	<div class="panel-body">
+						<p><input type="text" id="dialMotorRight" data-min="-255" data-max="255" value="0"></p>
+					</div>
+				</div>
+			</div>
+        	<div class="col-md-3 text-center">
+				<div class="panel panel-default">
+		  			<div class="panel-heading">
+		      			<h3 class="panel-title">Head position</h3>
+					</div>
+				  	<div class="panel-body">
+						<p><input type="text" id="dialHeadPosition" data-min="600" data-max="2400" value="1500" data-angleArc=170 data-angleOffset=-85 data-cursor=true></p>
+        			</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+        	<div class="col-md-3 text-center">
+				<div class="panel panel-default">
+		  			<div class="panel-heading">
+		      			<h3 class="panel-title">Actions</h3>
+					</div>
+				  	<div class="panel-body">
+        				<div class="btn-group-vertical" role="group">
+							<button type="button" class="btn btn-default" id="btnSubmit">Submit action</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	  	
 	  </div>
 
