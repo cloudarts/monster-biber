@@ -34,4 +34,16 @@ io.on('connection', function(socket) {
 
 var onNewAction = function(data) {
 	console.log("received new action: " + JSON.stringify(data));	
+
+	serialPort.write("2:" + data.left);
+	serialPort.write("3:" + data.right);
+	serialPort.write("0:" + data.head);
+
+	setTimeout(function() {
+		stop();
+	}, data.duration * 1000);
+};
+
+var stop = function() {
+	serialPort.write("4:0");
 };

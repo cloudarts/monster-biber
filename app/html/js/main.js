@@ -26,6 +26,6 @@ $(function() {
 		dialDuration.val(0).trigger('change');
 		dialLeft.val(0).trigger('change');
 		dialRight.val(0).trigger('change');
-		dialHead.val(1500).trigger('change');
+	//	dialHead.val(1500).trigger('change');
 	};
 });

@@ -26,7 +26,7 @@ COMMANDS AND VALUES:
 #define TRIGGER_PIN  A1  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     A0  // Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 300 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
-#define ANSWER_SERVO_DELAY 1000
+#define ANSWER_SERVO_DELAY 600
 #define SERVO_WAIT_TIME_MILLIS 30
 #define SONAR_WAIT_TIME_MILLIS 30
 
@@ -76,7 +76,12 @@ void setup() {
   motorLeft.run(RELEASE);
   motorRight.run(RELEASE);
   
-  sayYes();
+  servo.writeMicroseconds(SERVO_MIN_MS);
+  delay(ANSWER_SERVO_DELAY);
+  servo.writeMicroseconds(SERVO_MAX_MS);
+  delay(ANSWER_SERVO_DELAY);
+  servo.writeMicroseconds(SERVO_CENTER);
+  delay(ANSWER_SERVO_DELAY);
 }
 
 void loop() {
