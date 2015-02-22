@@ -39,8 +39,8 @@ const int SERVO_CENTER = (SERVO_MAX_MS - SERVO_MIN_MS)/2 + SERVO_MIN_MS;
 
 Servo servo;
 
-AF_DCMotor motorLeft(1);
-AF_DCMotor motorRight(4);
+AF_DCMotor motorLeft(1, MOTOR12_1KHZ);
+AF_DCMotor motorRight(4, MOTOR12_1KHZ);
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
