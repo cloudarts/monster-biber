@@ -65,13 +65,14 @@ void setup() {
   motorRight.setSpeed(0);
   motorLeft.run(RELEASE);
   motorRight.run(RELEASE);
-  
+  /*
   servo.writeMicroseconds(SERVO_MIN_MS);
   delay(ANSWER_SERVO_DELAY);
   servo.writeMicroseconds(SERVO_MAX_MS);
   delay(ANSWER_SERVO_DELAY);
   servo.writeMicroseconds(SERVO_CENTER);
   delay(ANSWER_SERVO_DELAY);
+  */
 }
 
 void loop() {
@@ -88,22 +89,27 @@ bool readSerial() {
       
       // left motor speed
       value = Serial.parseInt();
-      setMotorSpeed(1, value);
+      int leftSpeed = value;
       
       // right motor speed
       value = Serial.parseInt();
-      setMotorSpeed(2, value);
+      value *= -1;  // right motor is wired differently
+      int rightSpeed = value;
+      
+      setMotorSpeed(1, leftSpeed);
+      setMotorSpeed(2, rightSpeed);
       break;
-  }
-  else if( command == 1 ) {    // head movement: "1;1500"
-    
-    value = Serial.parseInt();
-    servo.writeMicroseconds(value); 
-    break;
-  }
-  else if( command == 2 ) {   // sonar ping; "2"
-     sonarPing(); 
-     break;
+    }
+    else if( command == 1 ) {    // head movement: "1;1500"
+      
+      value = Serial.parseInt();
+      servo.writeMicroseconds(value); 
+      break;
+    }
+    else if( command == 2 ) {   // sonar ping; "2"
+       sonarPing(); 
+       break;
+    }
   }
 }
 
@@ -134,8 +140,6 @@ void setMotorSpeed(int motor, int value) {
     motorRight.setSpeed(absValue);
     motorRight.run(direction);  
   }
-  
-  printOK();
 } 
 
 void sonarPing() {
