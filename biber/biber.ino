@@ -48,16 +48,6 @@ char inData[COMMAND_BUFFER_LENGTH]; // Allocate some space for the string
 char inChar=-1; // Where to store the character read
 byte index = 0; // Index into array; where to store the character
 
-enum COMMAND {
-  NONE = -1, 
-  TURN_HEAD, // value = servo microseconds
-  SONAR,  
-  SET_MOTOR_LEFT,    // value -255 - 255
-  SET_MOTOR_RIGHT,
-  SET_MOTORS, 
-  COMMAND_MAX
-} currentCommand;
-
 
 unsigned long lastServoTime;
 unsigned long lastSonarTime;
@@ -89,51 +79,32 @@ void loop() {
 }
 
 bool readSerial() {
-  bool readSomething = false;
-  COMMAND command = NONE;
   int value = -1;
   while (Serial.available() > 0) {
-    readSomething = true;
-    command = (COMMAND)Serial.parseInt();
-    if( command < 0 || command > COMMAND_MAX) {
-      command = NONE;
-    }
-    value = Serial.parseInt();
+    
+    int command = Serial.parseInt();
+    
+    if( command == 0 ) {        // movement: "0;255;255"
+      
+      // left motor speed
+      value = Serial.parseInt();
+      setMotorSpeed(1, value);
+      
+      // right motor speed
+      value = Serial.parseInt();
+      setMotorSpeed(2, value);
+      break;
   }
-  
-  switch(command) {
-    case SONAR: {
-      sonarPing();
-      break;
-    }
+  else if( command == 1 ) {    // head movement: "1;1500"
     
-    case TURN_HEAD: {
-      turnHead(value);  
-      break;
-    }
-    
-    case SET_MOTOR_LEFT: {
-      setMotorSpeed(1, value);  
-      break;
-    } 
-    
-    case SET_MOTOR_RIGHT: {
-      setMotorSpeed(2, value);  
-      break;
-    } 
-    
-    case SET_MOTORS: {
-      setMotorSpeed(0, value);  
-      break;
-    } 
-
-    default: {
-      setMotorSpeed(0,0);
-      turnHead(SERVO_CENTER);
-    }
-  } 
-  
-  return readSomething;
+    value = Serial.parseInt();
+    servo.writeMicroseconds(value); 
+    break;
+  }
+  else if( command == 2 ) {   // sonar ping; "2"
+     sonarPing(); 
+     break;
+  }
 }
 
 void setMotorSpeed(int motor, int value) {
@@ -163,69 +134,19 @@ void setMotorSpeed(int motor, int value) {
     motorRight.setSpeed(absValue);
     motorRight.run(direction);  
   }
+  
+  printOK();
 } 
 
 void sonarPing() {
   unsigned int dist = getDistance();
   Serial.print(dist);
   Serial.print("\n");
-  printOK();
 }
 
-void turnHead(int microseconds) {
-  microseconds = constrain(microseconds, SERVO_MIN_MS, SERVO_MAX_MS);
-  servo.writeMicroseconds(microseconds);
-  waitForServo();
-  lastServoTime = millis();
-  printOK();
-}
-
-void waitForServo() {
-  unsigned long now = millis();
-  unsigned long diff = now - lastServoTime;
-  if( diff < SERVO_WAIT_TIME_MILLIS ) {
-    unsigned long delayTime = SERVO_WAIT_TIME_MILLIS - diff;
-    delay(delayTime);
-  }
-}
-
-void printOK() {
-  Serial.println("ok"); 
-}
 
 unsigned int getDistance() {
   unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (uS).
   unsigned int distance = uS / US_ROUNDTRIP_CM; // Convert ping time to distance in cm and print result (0 = outside set distance range)
   return distance;
-}
-
-
-void sayNo() {
-   servo.writeMicroseconds(SERVO_CENTER);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_MAX_MS);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_CENTER);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_MAX_MS);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_CENTER);
-   delay(ANSWER_SERVO_DELAY);
-   
-  lastServoTime = millis();
-}
-
-void sayYes() {
-   servo.writeMicroseconds(SERVO_CENTER);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_MIN_MS);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_CENTER);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_MIN_MS);
-   delay(ANSWER_SERVO_DELAY);
-   servo.writeMicroseconds(SERVO_CENTER);
-   delay(ANSWER_SERVO_DELAY);
-   
-  lastServoTime = millis();
 }

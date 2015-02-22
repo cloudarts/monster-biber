@@ -30,20 +30,26 @@ io.on('connection', function(socket) {
 	socket.on('action', function(data) {
 		onNewAction(data);
 	});
+
+	socket.on('head', function(data) {
+		serialPort.write("1:" + data.head);
+	});
+
+	socket.on('sonar', function() {
+		serialPort.write("2");
+	});
 });
 
 var onNewAction = function(data) {
 	console.log("received new action: " + JSON.stringify(data));	
 
-	serialPort.write("2:" + data.left);
-	serialPort.write("3:" + data.right);
-	serialPort.write("0:" + data.head);
-
-	setTimeout(function() {
-		stop();
-	}, data.duration * 1000);
+	serialPort.write("0:" + data.left + ":" + data.right, function(err, result) {
+		setTimeout(function() {
+			stop();
+		}, data.duration * 1000);
+	});
 };
 
 var stop = function() {
-	serialPort.write("4:0");
+	serialPort.write("0:0:0");
 };
