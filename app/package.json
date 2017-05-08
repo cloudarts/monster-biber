@@ -1,9 +1,0 @@
-{
-  "name": "biber-app",
-  "version": "0.0.1",
-  "description": "Control app for Monsterbiber der Verdammnis 3000",
-  "dependencies": {
-    "express": "^4.11.2",
-    "socket.io": "^1.3.3"
-  }
-}
