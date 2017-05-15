@@ -1,47 +1,50 @@
 import serial
 import sys
-import pygame
+import tornado.httpserver
+import tornado.ioloop
+import tornado.options
+import tornado.web
+import tornado.websocket
 
-ser = serial.Serial()
+from tornado.options import define, options
+define("device", default="/dev/ttyUSB0", help="serial device name, like /dev/ttyUSB0", type=string)
+define("baudrate", default=115200, help="serial device baud rate, like 115200", type=int)
+define("port", default=8080, help="run on the given port", type=int)
+
+ser = serial.Serial(options.device)
 duration = 100
 
+class IndexHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render('index.html')
+
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    def open(self):
+        print 'new connection'
+        self.write_message("connected")
+
+    def on_message(self, message):
+        print 'message received %s' % message
+        self.write_message('message received %s' % message)
+
+    def on_close(self):
+       print 'connection closed'
+
 def main(argv):
-    if len(argv) != 2:
-        print "Usage: python biber.py [SERIAL PORT NAME]"
-        sys.exit(1)
-
-    dev = argv[1]
-    print "Opening serial device at " + dev
-
-    ser = serial.Serial(dev, 115200)
-
-    pygame.init()
-    while True:
-        for event in pygmae.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_ESCAPE:
-                    sys.exit()
-
-                if event.key == pygame.K_PLUS:
-                    duration += 50
-                    duration = max(10000, duration)
-                    print "duration is now " + duration + "ms."
-                elif event.key == pygame.K_MINUS:
-                    duration -= 50
-                    duration = max(0, duration)
-                
-                if event.key == pygame.K_LEFT:
-                    left(duration)
-                elif event.key == pygame.K_RIGHT:
-                    right(duration)
-
-                if event.key == pygame.K_UP:
-                    forward(duration)
-                elif event.key == pygame.K_DOWN:
-                    backward(duration)
+    print "Opening serial device at " + options.device
+    ser = serial.Serial(device, options.baudrate)
+    
+    app = tornado.web.Application(
+        handlers=[
+            (r"/", IndexHandler),
+            (r"/ws", WebSocketHandler)
+        ]
+    )
+    httpServer = tornado.httpserver.HTTPServer(app)
+    httpServer.listen(options.port)
+    print "Listening on port:", options.port
+    tornado.ioloop.IOLoop.instance().start()
+    
 
 def left(duration):
     ser.write(b'0,'+duration)
@@ -60,4 +63,5 @@ def setSpeed(speed):
 
 ##############################################################
 if __name__ == "__main__":
+    tornado.options.parse_command_line()
     main(sys.argv)
