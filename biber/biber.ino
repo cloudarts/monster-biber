@@ -1,3 +1,4 @@
+
 // set serial to 115200
 // send ascii: 
 // 0,100 = left, 100ms
@@ -5,15 +6,28 @@
 // 2,1000 = forward, 1000ms
 // 3,2000 = backward, 1000ms
 // 4,128 = set speed of both motors to 128 
-
+//
+// After every VALID command, the current sonar distance in cm is sent back,
+// 0 if beyond 200cm.
 
 #include <AFMotor.h>
+#include <NewPing.h>
 
+// SERIAL
 #define BAUD_RATE 115200
 
+// MOTOR
 AF_DCMotor motorLeft(2, MOTOR12_1KHZ);
 AF_DCMotor motorRight(3, MOTOR34_1KHZ);
 
+// SONAR
+#define SONAR_TRIGGER_PIN 18
+#define SONAR_ECHO_PIN 19
+#define SONAR_MAX_DISTANCE 200
+NewPing sonar(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN, SONAR_MAX_DISTANCE);
+
+// an enum for movement commands,
+// will be used in a stringified manner via serial comm
 enum Command {
   Left = 0,
   Right,
@@ -61,6 +75,9 @@ void loop() {
             setSpeed(value);
             break;          
         }
+
+        // at the end, send the current sonar distance over Serial
+        ping();
     }
 }
 
@@ -97,8 +114,11 @@ void driveBackward(int delayMs) {
 }
 
 void setSpeed(int speed) {
-  
   motorLeft.setSpeed(speed);
   motorRight.setSpeed(speed);
+}
+
+void ping() {
+  Serial.print(sonar.ping_cm());
 }
 
